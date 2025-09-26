@@ -100,16 +100,16 @@ def get_vm_details(hostname: str, vm_id: str) -> str:
         )
 
         # Network info
-        nics = vm.get("nics", {})
+        nics = vm.get("nics", [])
         if nics:
             result += "\nNetwork Interfaces:\n"
-            for nic_id, nic in nics.items():
+            for i, nic in enumerate(nics):
                 network_name = "Unknown"
                 if isinstance(nic, dict):
                     backing = nic.get("backing", {})
                     if isinstance(backing, dict):
                         network_name = backing.get("network_name", "Unknown")
-                result += f"  {nic_id}: {network_name}\n"
+                result += f"  NIC {i}: {network_name}\n"
 
         return result
 
