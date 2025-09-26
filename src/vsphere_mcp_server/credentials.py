@@ -75,10 +75,10 @@ display dialog "Enter username for vSphere host {hostname}" ¬
         if "text returned:" in output:
             username = output.split("text returned:")[1].strip()
         else:
-            raise Exception("Failed to parse username from dialog")
+            raise ValueError("Failed to parse username from dialog")
 
-    except (subprocess.CalledProcessError, IndexError) as exc:
-        raise Exception("Username input cancelled or failed") from exc
+    except (subprocess.CalledProcessError, IndexError, ValueError) as exc:
+        raise RuntimeError("Username input cancelled or failed") from exc
 
     # Password prompt
     display_username = (
@@ -107,10 +107,10 @@ display dialog "Enter password for {display_username}" ¬
         if "text returned:" in output:
             password = output.split("text returned:")[1].strip()
         else:
-            raise Exception("Failed to parse password from dialog")
+            raise ValueError("Failed to parse password from dialog")
 
-    except (subprocess.CalledProcessError, IndexError) as exc:
-        raise Exception("Password input cancelled or failed") from exc
+    except (subprocess.CalledProcessError, IndexError, ValueError) as exc:
+        raise RuntimeError("Password input cancelled or failed") from exc
 
     # Normalize username format
     if "@" not in username and "\\" not in username:

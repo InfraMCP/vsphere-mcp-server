@@ -500,7 +500,8 @@ def get_network_details(hostname: str, network_id: str) -> str:
     except Exception as e:
         error_msg = str(e)
         if "404" in error_msg:
-            return f"Network {network_id} not found or is a distributed portgroup (not accessible via this API)"
+            return (f"Network {network_id} not found or is a distributed portgroup "
+                   "(not accessible via this API)")
         return _handle_error(e, f"getting network {network_id} details")
     finally:
         client.close()
