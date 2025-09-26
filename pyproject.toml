@@ -23,8 +23,8 @@ classifiers = [
 ]
 dependencies = [
     "mcp==1.14.1",
-    "requests>=2.31.0",
-    "urllib3>=2.0.0",
+    "requests==2.32.5",
+    "urllib3==2.5.0",
 ]
 
 [project.optional-dependencies]
