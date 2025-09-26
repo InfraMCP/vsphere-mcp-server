@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "vsphere-mcp-server"
 version = "0.1.0"
 description = "MCP server for VMware vSphere infrastructure management"
-authors = [{name = "Rory McMahon", email = "rory.mcmahon@vocus.com.au"}]
+authors = [{name = "Rory McMahon", email = "rory.mcmahon@example.com"}]
 license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.8"

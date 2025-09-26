@@ -11,7 +11,7 @@
   "value": [
     {
       "host": "host-100453",
-      "name": "syd03b2esx04.vocus.local",
+      "name": "esx01.company.local",
       "connection_state": "CONNECTED|DISCONNECTED|NOT_RESPONDING",
       "power_state": "POWERED_ON|POWERED_OFF|STANDBY"
     }
