@@ -25,6 +25,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Complete test suite with pytest
 - Code quality improvements (pylint score 9.41/10)
 
+### Fixed
+- Credential prompting now works correctly for both username and password
+- Fixed list object handling in get_vm_details
+- Improved datastore capacity calculation with validation
+- Added proper error messages for vSphere API limitations
+
+### Working Tools (9/16)
+- ✅ list_vms - Complete VM inventory with specs
+- ✅ get_vm_details - Detailed VM information including NICs
+- ✅ list_hosts - ESXi host inventory
+- ✅ list_datacenters - Datacenter information
+- ✅ get_datacenter_details - Datacenter details
+- ✅ list_datastores - Storage inventory with capacity
+- ✅ get_datastore_details - Storage details (with validation)
+- ✅ list_networks - Network inventory with VLAN info
+- ✅ list_vlans - VLAN extraction and grouping
+- ✅ list_folders - Folder organization
+
+### API Limitations (2/16)
+- ⚠️ get_network_details - vSphere API doesn't expose distributed portgroup details
+- ⚠️ get_folder_details - Folder IDs not accessible via detail endpoint
+
 ### Security
 - Secure credential storage in macOS Keychain
 - Session-based authentication with automatic cleanup
