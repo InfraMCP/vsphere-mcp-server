@@ -507,7 +507,66 @@ def get_network_details(hostname: str, network_id: str) -> str:
 
 
 @mcp.tool()
-def list_vlans(hostname: str) -> str:
+def get_vlan_info(hostname: str, vlan_query: str) -> str:
+    """Get information about a VLAN by name or VLAN ID.
+
+    Args:
+        hostname: vSphere hostname (e.g., vcenter.domain.local)
+        vlan_query: VLAN name (e.g., v1306-MEL03-Secure-Management) or VLAN ID (e.g., 1306)
+    """
+    client = VSphereClient(hostname)
+    try:
+        response = client.get("vcenter/network")
+        networks = response.get("value", [])
+
+        if not networks:
+            return "No networks found"
+
+        matches = []
+        
+        # Search by name (partial match, case-insensitive)
+        for network in networks:
+            name = network.get("name", "")
+            if vlan_query.lower() in name.lower():
+                matches.append(network)
+        
+        # If no name matches and query is numeric, search by VLAN ID
+        if not matches and vlan_query.isdigit():
+            vlan_id = vlan_query
+            for network in networks:
+                name = network.get("name", "")
+                vlan_match = re.search(r"v(\d+)-|VLAN(\d+)", name)
+                if vlan_match:
+                    extracted_vlan = vlan_match.group(1) or vlan_match.group(2)
+                    if extracted_vlan == vlan_id:
+                        matches.append(network)
+
+        if not matches:
+            return f"No VLAN found matching '{vlan_query}'"
+
+        result = f"VLAN Search Results for '{vlan_query}':\n\n"
+        
+        for network in matches:
+            name = network.get("name", "Unknown")
+            result += f"• {name}\n"
+            result += f"  Network ID: {network.get('network', 'Unknown')}\n"
+            result += f"  Type: {network.get('type', 'Unknown')}\n"
+            
+            # Extract VLAN ID from name
+            vlan_match = re.search(r"v(\d+)-|VLAN(\d+)", name)
+            if vlan_match:
+                vlan_id = vlan_match.group(1) or vlan_match.group(2)
+                result += f"  VLAN ID: {vlan_id}\n"
+            
+            result += "\n"
+
+        result += f"Found {len(matches)} matching network(s)"
+        return result
+
+    except Exception as e:
+        return _handle_error(e, f"searching for VLAN '{vlan_query}'")
+    finally:
+        client.close()
     """Extract and list VLAN information from network names.
 
     Args:
