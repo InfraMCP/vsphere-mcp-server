@@ -70,7 +70,12 @@ display dialog "Enter username for vSphere host {hostname}" ¬
             check=True,
         )
 
-        username = result.stdout.strip().split("text returned:")[1].strip()
+        # Parse username from AppleScript output
+        output = result.stdout.strip()
+        if "text returned:" in output:
+            username = output.split("text returned:")[1].strip()
+        else:
+            raise Exception("Failed to parse username from dialog")
 
     except (subprocess.CalledProcessError, IndexError) as exc:
         raise Exception("Username input cancelled or failed") from exc
@@ -97,7 +102,12 @@ display dialog "Enter password for {display_username}" ¬
             check=True,
         )
 
-        password = result.stdout.strip().split("text returned:")[1].strip()
+        # Parse password from AppleScript output
+        output = result.stdout.strip()
+        if "text returned:" in output:
+            password = output.split("text returned:")[1].strip()
+        else:
+            raise Exception("Failed to parse password from dialog")
 
     except (subprocess.CalledProcessError, IndexError) as exc:
         raise Exception("Password input cancelled or failed") from exc
