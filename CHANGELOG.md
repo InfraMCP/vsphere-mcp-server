@@ -22,9 +22,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SSL verification disabled for enterprise environments
 - Session token management with automatic refresh
 - Comprehensive documentation and usage examples
+- Complete test suite with pytest
+- Code quality improvements (pylint score 9.41/10)
 
 ### Security
 - Secure credential storage in macOS Keychain
 - Session-based authentication with automatic cleanup
 - Domain extraction for credential organization
 - TTL-based credential expiry
+
+### Changed
+- Removed all domain-specific references from API discovery
+- Made codebase completely generic and reusable
+- Cleaned git history of sensitive files
