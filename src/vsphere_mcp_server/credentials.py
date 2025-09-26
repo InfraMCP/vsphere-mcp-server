@@ -82,7 +82,7 @@ display dialog "Enter username for vSphere host {hostname}" ¬
 
     # Password prompt
     display_username = (
-        username.replace("@", "\\") if "@" in username else f"{domain}\\{username}"
+        username.replace("@", "\\\\") if "@" in username else f"{domain}\\\\{username}"
     )
     password_script = f'''
 display dialog "Enter password for {display_username}" ¬
