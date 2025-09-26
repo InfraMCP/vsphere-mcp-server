@@ -322,8 +322,17 @@ def get_datastore_details(hostname: str, datastore_id: str) -> str:
         if not ds:
             return f"Datastore {datastore_id} not found"
 
-        capacity = ds.get("capacity", 0)
-        free_space = ds.get("free_space", 0)
+        capacity = ds.get("capacity", 0) or 0
+        free_space = ds.get("free_space", 0) or 0
+        
+        # Ensure values are positive
+        if capacity <= 0 or free_space < 0:
+            result = f"Datastore Details: {ds.get('name', 'Unknown')}\n"
+            result += f"ID: {datastore_id}\n"
+            result += f"Type: {ds.get('type', 'Unknown')}\n"
+            result += "Capacity information not available or invalid\n"
+            return result
+            
         used_space = capacity - free_space
         used_pct = (used_space / capacity * 100) if capacity > 0 else 0
 
