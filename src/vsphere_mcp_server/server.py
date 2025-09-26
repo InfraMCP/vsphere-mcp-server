@@ -79,10 +79,27 @@ def get_vm_details(hostname: str, vm_id: str) -> str:
 
     Args:
         hostname: vSphere hostname (e.g., vcenter.domain.local)
-        vm_id: Virtual machine ID
+        vm_id: Virtual machine ID or name
     """
     client = VSphereClient(hostname)
     try:
+        # If vm_id doesn't start with 'vm-', assume it's a name and look up the ID
+        if not vm_id.startswith('vm-'):
+            vms_response = client.get("vcenter/vm")
+            vms = vms_response.get("value", [])
+            
+            # Find VM by name (case-insensitive)
+            vm_id_found = None
+            for vm in vms:
+                if vm.get("name", "").lower() == vm_id.lower():
+                    vm_id_found = vm.get("vm")
+                    break
+            
+            if not vm_id_found:
+                return f"Virtual machine '{vm_id}' not found by name"
+            
+            vm_id = vm_id_found
+
         response = client.get(f"vcenter/vm/{vm_id}")
         vm = response.get("value", {})
 
