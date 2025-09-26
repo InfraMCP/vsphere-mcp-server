@@ -1,5 +1,9 @@
 # vSphere MCP Server
 
+[![Pylint](https://github.com/rorymcmahon/vsphere-mcp-server/actions/workflows/pylint.yml/badge.svg)](https://github.com/rorymcmahon/vsphere-mcp-server/actions/workflows/pylint.yml)
+[![Safety Security Scan](https://github.com/rorymcmahon/vsphere-mcp-server/actions/workflows/safety-scan.yml/badge.svg)](https://github.com/rorymcmahon/vsphere-mcp-server/actions/workflows/safety-scan.yml)
+[![Dependency Security Check](https://github.com/rorymcmahon/vsphere-mcp-server/actions/workflows/dependency-security.yml/badge.svg)](https://github.com/rorymcmahon/vsphere-mcp-server/actions/workflows/dependency-security.yml)
+
 MCP server for VMware vSphere infrastructure management. Provides comprehensive access to vSphere environments through the Model Context Protocol.
 
 ## Features
