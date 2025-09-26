@@ -102,9 +102,14 @@ def get_vm_details(hostname: str, vm_id: str) -> str:
         # Network info
         nics = vm.get("nics", {})
         if nics:
-            result += f"\nNetwork Interfaces:\n"
+            result += "\nNetwork Interfaces:\n"
             for nic_id, nic in nics.items():
-                result += f"  {nic_id}: {nic.get('backing', {}).get('network_name', 'Unknown')}\n"
+                network_name = "Unknown"
+                if isinstance(nic, dict):
+                    backing = nic.get("backing", {})
+                    if isinstance(backing, dict):
+                        network_name = backing.get("network_name", "Unknown")
+                result += f"  {nic_id}: {network_name}\n"
 
         return result
 
@@ -382,7 +387,7 @@ def get_folder_details(hostname: str, folder_id: str) -> str:
         folder = response.get("value", {})
 
         if not folder:
-            return f"Folder {folder_id} not found"
+            return f"Folder {folder_id} not found or inaccessible"
 
         result = f"Folder Details: {folder.get('name', 'Unknown')}\n"
         result += f"ID: {folder_id}\n"
@@ -391,6 +396,9 @@ def get_folder_details(hostname: str, folder_id: str) -> str:
         return result
 
     except Exception as e:
+        error_msg = str(e)
+        if "404" in error_msg:
+            return f"Folder {folder_id} not found or access denied (may be a system folder)"
         return _handle_error(e, f"getting folder {folder_id} details")
     finally:
         client.close()
@@ -448,7 +456,7 @@ def get_network_details(hostname: str, network_id: str) -> str:
         network = response.get("value", {})
 
         if not network:
-            return f"Network {network_id} not found"
+            return f"Network {network_id} not found or inaccessible"
 
         name = network.get("name", "Unknown")
         result = f"Network Details: {name}\n"
@@ -464,6 +472,9 @@ def get_network_details(hostname: str, network_id: str) -> str:
         return result
 
     except Exception as e:
+        error_msg = str(e)
+        if "404" in error_msg:
+            return f"Network {network_id} not found or is a distributed portgroup (not accessible via this API)"
         return _handle_error(e, f"getting network {network_id} details")
     finally:
         client.close()
