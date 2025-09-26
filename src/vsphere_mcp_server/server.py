@@ -87,17 +87,17 @@ def get_vm_details(hostname: str, vm_id: str) -> str:
         if not vm_id.startswith('vm-'):
             vms_response = client.get("vcenter/vm")
             vms = vms_response.get("value", [])
-            
+
             # Find VM by name (case-insensitive)
             vm_id_found = None
             for vm in vms:
                 if vm.get("name", "").lower() == vm_id.lower():
                     vm_id_found = vm.get("vm")
                     break
-            
+
             if not vm_id_found:
                 return f"Virtual machine '{vm_id}' not found by name"
-            
+
             vm_id = vm_id_found
 
         response = client.get(f"vcenter/vm/{vm_id}")
@@ -341,7 +341,7 @@ def get_datastore_details(hostname: str, datastore_id: str) -> str:
 
         capacity = ds.get("capacity", 0) or 0
         free_space = ds.get("free_space", 0) or 0
-        
+
         # Ensure values are positive
         if capacity <= 0 or free_space < 0:
             result = f"Datastore Details: {ds.get('name', 'Unknown')}\n"
@@ -349,7 +349,7 @@ def get_datastore_details(hostname: str, datastore_id: str) -> str:
             result += f"Type: {ds.get('type', 'Unknown')}\n"
             result += "Capacity information not available or invalid\n"
             return result
-            
+
         used_space = capacity - free_space
         used_pct = (used_space / capacity * 100) if capacity > 0 else 0
 
@@ -523,13 +523,13 @@ def get_vlan_info(hostname: str, vlan_query: str) -> str:
             return "No networks found"
 
         matches = []
-        
+
         # Search by name (partial match, case-insensitive)
         for network in networks:
             name = network.get("name", "")
             if vlan_query.lower() in name.lower():
                 matches.append(network)
-        
+
         # If no name matches and query is numeric, search by VLAN ID
         if not matches and vlan_query.isdigit():
             vlan_id = vlan_query
@@ -545,19 +545,19 @@ def get_vlan_info(hostname: str, vlan_query: str) -> str:
             return f"No VLAN found matching '{vlan_query}'"
 
         result = f"VLAN Search Results for '{vlan_query}':\n\n"
-        
+
         for network in matches:
             name = network.get("name", "Unknown")
             result += f"• {name}\n"
             result += f"  Network ID: {network.get('network', 'Unknown')}\n"
             result += f"  Type: {network.get('type', 'Unknown')}\n"
-            
+
             # Extract VLAN ID from name
             vlan_match = re.search(r"v(\d+)-|VLAN(\d+)", name)
             if vlan_match:
                 vlan_id = vlan_match.group(1) or vlan_match.group(2)
                 result += f"  VLAN ID: {vlan_id}\n"
-            
+
             result += "\n"
 
         result += f"Found {len(matches)} matching network(s)"
@@ -567,6 +567,10 @@ def get_vlan_info(hostname: str, vlan_query: str) -> str:
         return _handle_error(e, f"searching for VLAN '{vlan_query}'")
     finally:
         client.close()
+
+
+@mcp.tool()
+def list_vlans(hostname: str) -> str:
     """Extract and list VLAN information from network names.
 
     Args:
