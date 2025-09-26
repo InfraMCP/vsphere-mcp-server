@@ -1,5 +1,8 @@
 # vSphere MCP Server
 
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PyPI version](https://badge.fury.io/py/vsphere-mcp-server.svg)](https://badge.fury.io/py/vsphere-mcp-server)
 [![Pylint](https://github.com/rorymcmahon/vsphere-mcp-server/actions/workflows/pylint.yml/badge.svg)](https://github.com/rorymcmahon/vsphere-mcp-server/actions/workflows/pylint.yml)
 [![Safety Security Scan](https://github.com/rorymcmahon/vsphere-mcp-server/actions/workflows/safety-scan.yml/badge.svg)](https://github.com/rorymcmahon/vsphere-mcp-server/actions/workflows/safety-scan.yml)
 [![Dependency Security Check](https://github.com/rorymcmahon/vsphere-mcp-server/actions/workflows/dependency-security.yml/badge.svg)](https://github.com/rorymcmahon/vsphere-mcp-server/actions/workflows/dependency-security.yml)
@@ -17,9 +20,17 @@ MCP server for VMware vSphere infrastructure management. Provides comprehensive 
 
 ## Installation
 
+### From PyPI (Recommended)
+
+```bash
+pip install vsphere-mcp-server
+```
+
+### From Source
+
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/rorymcmahon/vsphere-mcp-server.git
 cd vsphere-mcp-server
 
 # Install dependencies
