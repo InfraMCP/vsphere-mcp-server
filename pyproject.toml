@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "vsphere-mcp-server"
 version = "0.1.0"
 description = "MCP server for VMware vSphere infrastructure management"
-authors = [{name = "Rory McMahon", email = "rory.mcmahon@example.com"}]
+authors = [{name = "Rory McMahon", email = "rory.mcmahon@vocus.com.au"}]
 license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.8"
@@ -27,6 +27,14 @@ dependencies = [
     "urllib3==2.5.0",
 ]
 
+keywords = ["mcp", "vsphere", "vmware", "virtualization", "infrastructure"]
+
+[project.urls]
+Homepage = "https://github.com/InfraMCP/vsphere-mcp-server"
+Repository = "https://github.com/InfraMCP/vsphere-mcp-server"
+Issues = "https://github.com/InfraMCP/vsphere-mcp-server/issues"
+Documentation = "https://github.com/InfraMCP/vsphere-mcp-server#readme"
+
 [project.optional-dependencies]
 dev = [
     "pytest==8.3.3",
@@ -34,6 +42,10 @@ dev = [
     "black==24.8.0",
     "isort==5.13.2",
     "mypy>=1.0.0",
+]
+security = [
+    "safety>=3.0.0",
+    "pip-audit>=2.6.0",
 ]
 
 [project.scripts]
@@ -49,6 +61,12 @@ target-version = ['py38']
 [tool.isort]
 profile = "black"
 line_length = 88
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
 
 [tool.mypy]
 python_version = "3.8"
