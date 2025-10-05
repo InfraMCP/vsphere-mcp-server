@@ -1,5 +1,6 @@
 name: OSV-Scanner PR Scan
 
+# Change "main" to your default branch if you use a different name, i.e. "master"
 on:
   pull_request:
     branches: [main]
@@ -7,55 +8,13 @@ on:
     branches: [main]
 
 permissions:
+  # Required to upload SARIF file to CodeQL. See: https://github.com/github/codeql-action/issues/2117
   actions: read
+  # Require writing security events to upload SARIF file to security tab
   security-events: write
+  # Only need to read contents
   contents: read
-  pull-requests: write  # Needed to post comments
 
 jobs:
-  osv-scan-and-comment:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run OSV Scanner
-        id: osv
-        uses: google/osv-scanner-action@v2.2.3
-        with:
-          scan-args: --json .
-        continue-on-error: true
-
-      - name: Save OSV results
-        run: |
-          echo '${{ steps.osv.outputs.json-results }}' > osv-results.json
-
-      - name: Format OSV results for comment
-        id: format
-        run: |
-          if [ -s osv-results.json ]; then
-            VULNS=$(jq -r '.results | map(select(.vulnerabilities != null and .vulnerabilities | length > 0)) | length' osv-results.json)
-            if [ "$VULNS" -gt 0 ]; then
-              SUMMARY=":warning: **OSV Scanner found $VULNS vulnerable package(s).**"
-              DETAILS="\`\`\`json
-$(cat osv-results.json | jq '.results | map(select(.vulnerabilities != null and .vulnerabilities | length > 0))')
-\`\`\`"
-            else
-              SUMMARY=":white_check_mark: **OSV Scanner found no vulnerable packages.**"
-              DETAILS=""
-            fi
-          else
-            SUMMARY=":grey_question: **OSV Scanner did not produce a result file.**"
-            DETAILS=""
-          fi
-          {
-            echo "$SUMMARY"
-            echo ""
-            echo "$DETAILS"
-          } > osv-comment.md
-
-      - name: Comment on PR with results
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body-path: osv-comment.md
+  scan-pr:
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.2.3"
