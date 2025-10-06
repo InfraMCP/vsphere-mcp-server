@@ -15,6 +15,10 @@ on:
     # Run daily at 9 AM UTC
     - cron: '0 9 * * *'
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   security:
     runs-on: ubuntu-latest
