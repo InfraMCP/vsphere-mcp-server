@@ -1,11 +1,12 @@
 """vSphere MCP Server - Main server implementation."""
 
 import re
+from typing import Dict, List
 
 from mcp.server.fastmcp import FastMCP
-from .vsphere_client import VSphereClient
-from .credentials import clear_credentials
 
+from .credentials import clear_credentials
+from .vsphere_client import VSphereClient
 
 # Initialize MCP server
 mcp = FastMCP("vSphere MCP Server")
@@ -84,7 +85,7 @@ def get_vm_details(hostname: str, vm_id: str) -> str:
     client = VSphereClient(hostname)
     try:
         # If vm_id doesn't start with 'vm-', assume it's a name and look up the ID
-        if not vm_id.startswith('vm-'):
+        if not vm_id.startswith("vm-"):
             vms_response = client.get("vcenter/vm")
             vms = vms_response.get("value", [])
 
@@ -500,8 +501,10 @@ def get_network_details(hostname: str, network_id: str) -> str:
     except (ConnectionError, ValueError, KeyError) as e:
         error_msg = str(e)
         if "404" in error_msg:
-            return (f"Network {network_id} not found or is a distributed portgroup "
-                   "(not accessible via this API)")
+            return (
+                f"Network {network_id} not found or is a distributed portgroup "
+                "(not accessible via this API)"
+            )
         return _handle_error(e, f"getting network {network_id} details")
     finally:
         client.close()
@@ -585,7 +588,7 @@ def list_vlans(hostname: str) -> str:
         if not networks:
             return "No networks found"
 
-        vlans = {}
+        vlans: Dict[str, List[str]] = {}
         for network in networks:
             name = network.get("name", "Unknown")
             vlan_match = re.search(r"v(\d+)-|VLAN(\d+)", name)
@@ -613,7 +616,7 @@ def list_vlans(hostname: str) -> str:
         client.close()
 
 
-def main():
+def main() -> None:
     """Main entry point for the MCP server."""
     mcp.run()
 

@@ -1,7 +1,7 @@
 """vSphere REST API client wrapper."""
 
 import base64
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 import requests
 import urllib3
@@ -56,7 +56,8 @@ class VSphereClient:
                 response = self.session.get(f"{self.base_url}/{endpoint}", timeout=30)
 
             response.raise_for_status()
-            return response.json()
+            json_response: Dict[str, Any] = response.json()
+            return json_response
 
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"GET request failed: {str(e)}") from e
