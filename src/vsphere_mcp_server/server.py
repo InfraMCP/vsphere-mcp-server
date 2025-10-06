@@ -1,11 +1,12 @@
 """vSphere MCP Server - Main server implementation."""
 
 import re
+from typing import Dict, List
 
 from mcp.server.fastmcp import FastMCP
-from .vsphere_client import VSphereClient
-from .credentials import clear_credentials
 
+from .credentials import clear_credentials
+from .vsphere_client import VSphereClient
 
 # Initialize MCP server
 mcp = FastMCP("vSphere MCP Server")
@@ -38,7 +39,7 @@ def vsphere_clear_credentials(hostname: str) -> str:
         if success:
             return f"Credentials cleared for domain extracted from {hostname}"
         return f"No stored credentials found for domain extracted from {hostname}"
-    except Exception as e:
+    except (OSError, KeyError, ValueError) as e:
         return _handle_error(e, "clearing credentials")
 
 
@@ -67,7 +68,7 @@ def list_vms(hostname: str) -> str:
 
         return result.strip()
 
-    except Exception as e:
+    except (ConnectionError, ValueError, KeyError) as e:
         return _handle_error(e, "listing VMs")
     finally:
         client.close()
@@ -84,7 +85,7 @@ def get_vm_details(hostname: str, vm_id: str) -> str:
     client = VSphereClient(hostname)
     try:
         # If vm_id doesn't start with 'vm-', assume it's a name and look up the ID
-        if not vm_id.startswith('vm-'):
+        if not vm_id.startswith("vm-"):
             vms_response = client.get("vcenter/vm")
             vms = vms_response.get("value", [])
 
@@ -130,7 +131,7 @@ def get_vm_details(hostname: str, vm_id: str) -> str:
 
         return result
 
-    except Exception as e:
+    except (ConnectionError, ValueError, KeyError) as e:
         return _handle_error(e, f"getting VM {vm_id} details")
     finally:
         client.close()
@@ -149,7 +150,7 @@ def power_on_vm(hostname: str, vm_id: str) -> str:
         client.post(f"vcenter/vm/{vm_id}/power/start")
         return "Power on initiated for VM " + vm_id
 
-    except Exception as e:
+    except (ConnectionError, ValueError, KeyError) as e:
         return _handle_error(e, f"powering on VM {vm_id}")
     finally:
         client.close()
@@ -168,7 +169,7 @@ def power_off_vm(hostname: str, vm_id: str) -> str:
         client.post(f"vcenter/vm/{vm_id}/power/stop")
         return f"Power off initiated for VM {vm_id}"
 
-    except Exception as e:
+    except (ConnectionError, ValueError, KeyError) as e:
         return _handle_error(e, f"powering off VM {vm_id}")
     finally:
         client.close()
@@ -198,7 +199,7 @@ def list_hosts(hostname: str) -> str:
 
         return result.strip()
 
-    except Exception as e:
+    except (ConnectionError, ValueError, KeyError) as e:
         return _handle_error(e, "listing hosts")
     finally:
         client.close()
@@ -227,7 +228,7 @@ def get_host_details(hostname: str, host_id: str) -> str:
 
         return result
 
-    except Exception as e:
+    except (ConnectionError, ValueError, KeyError) as e:
         return _handle_error(e, f"getting host {host_id} details")
     finally:
         client.close()
@@ -254,7 +255,7 @@ def list_datacenters(hostname: str) -> str:
 
         return result.strip()
 
-    except Exception as e:
+    except (ConnectionError, ValueError, KeyError) as e:
         return _handle_error(e, "listing datacenters")
     finally:
         client.close()
@@ -281,7 +282,7 @@ def get_datacenter_details(hostname: str, datacenter_id: str) -> str:
 
         return result
 
-    except Exception as e:
+    except (ConnectionError, ValueError, KeyError) as e:
         return _handle_error(e, f"getting datacenter {datacenter_id} details")
     finally:
         client.close()
@@ -317,7 +318,7 @@ def list_datastores(hostname: str) -> str:
 
         return result.strip()
 
-    except Exception as e:
+    except (ConnectionError, ValueError, KeyError) as e:
         return _handle_error(e, "listing datastores")
     finally:
         client.close()
@@ -362,7 +363,7 @@ def get_datastore_details(hostname: str, datastore_id: str) -> str:
 
         return result
 
-    except Exception as e:
+    except (ConnectionError, ValueError, KeyError) as e:
         return _handle_error(e, f"getting datastore {datastore_id} details")
     finally:
         client.close()
@@ -393,7 +394,7 @@ def list_folders(hostname: str, folder_type: str = "VIRTUAL_MACHINE") -> str:
 
         return result.strip()
 
-    except Exception as e:
+    except (ConnectionError, ValueError, KeyError) as e:
         return _handle_error(e, f"listing {folder_type} folders")
     finally:
         client.close()
@@ -421,7 +422,7 @@ def get_folder_details(hostname: str, folder_id: str) -> str:
 
         return result
 
-    except Exception as e:
+    except (ConnectionError, ValueError, KeyError) as e:
         error_msg = str(e)
         if "404" in error_msg:
             return f"Folder {folder_id} not found or access denied (may be a system folder)"
@@ -462,7 +463,7 @@ def list_networks(hostname: str) -> str:
 
         return result.strip()
 
-    except Exception as e:
+    except (ConnectionError, ValueError, KeyError) as e:
         return _handle_error(e, "listing networks")
     finally:
         client.close()
@@ -497,11 +498,13 @@ def get_network_details(hostname: str, network_id: str) -> str:
 
         return result
 
-    except Exception as e:
+    except (ConnectionError, ValueError, KeyError) as e:
         error_msg = str(e)
         if "404" in error_msg:
-            return (f"Network {network_id} not found or is a distributed portgroup "
-                   "(not accessible via this API)")
+            return (
+                f"Network {network_id} not found or is a distributed portgroup "
+                "(not accessible via this API)"
+            )
         return _handle_error(e, f"getting network {network_id} details")
     finally:
         client.close()
@@ -564,7 +567,7 @@ def get_vlan_info(hostname: str, vlan_query: str) -> str:
         result += f"Found {len(matches)} matching network(s)"
         return result
 
-    except Exception as e:
+    except (ConnectionError, ValueError, KeyError) as e:
         return _handle_error(e, f"searching for VLAN '{vlan_query}'")
     finally:
         client.close()
@@ -585,7 +588,7 @@ def list_vlans(hostname: str) -> str:
         if not networks:
             return "No networks found"
 
-        vlans = {}
+        vlans: Dict[str, List[str]] = {}
         for network in networks:
             name = network.get("name", "Unknown")
             vlan_match = re.search(r"v(\d+)-|VLAN(\d+)", name)
@@ -607,13 +610,13 @@ def list_vlans(hostname: str) -> str:
 
         return result.strip()
 
-    except Exception as e:
+    except (ConnectionError, ValueError, KeyError) as e:
         return _handle_error(e, "extracting VLAN information")
     finally:
         client.close()
 
 
-def main():
+def main() -> None:
     """Main entry point for the MCP server."""
     mcp.run()
 

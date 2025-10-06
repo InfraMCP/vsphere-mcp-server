@@ -53,14 +53,14 @@ def _prompt_for_credentials(
 ) -> Tuple[str, str]:
     """Prompt for credentials using macOS GUI."""
     # Username prompt
-    username_script = f'''
+    username_script = f"""
 display dialog "Enter username for vSphere host {hostname}" ¬
     default answer "username@{domain}" ¬
     with title "vSphere Authentication" ¬
     with icon note ¬
     buttons {{"Cancel", "OK"}} ¬
     default button "OK"
-'''
+"""
 
     try:
         result = subprocess.run(
@@ -84,7 +84,7 @@ display dialog "Enter username for vSphere host {hostname}" ¬
     display_username = (
         username.replace("@", "\\\\") if "@" in username else f"{domain}\\\\{username}"
     )
-    password_script = f'''
+    password_script = f"""
 display dialog "Enter password for {display_username}" ¬
     with title "vSphere Authentication" ¬
     with icon note ¬
@@ -92,7 +92,7 @@ display dialog "Enter password for {display_username}" ¬
     with hidden answer ¬
     buttons {{"Cancel", "OK"}} ¬
     default button "OK"
-'''
+"""
 
     try:
         result = subprocess.run(
