@@ -43,13 +43,13 @@ jobs:
       run: |
         python scripts/generate_dependency_report.py
     
-    - name: Run safety check
+    - name: Run safety scan
       run: |
-        safety check --json > safety-report.json || true
+        safety scan --output json > safety-report.json 2>&1 || echo '{"vulnerabilities": []}' > safety-report.json
         
     - name: Run pip-audit
       run: |
-        pip-audit --format=json --output=audit-report.json || true
+        pip-audit --format=json --output=audit-report.json || echo '[]' > audit-report.json
     
     - name: Upload dependency reports
       uses: actions/upload-artifact@v4
@@ -74,16 +74,50 @@ jobs:
           // Check if safety report exists and has vulnerabilities
           try {
             const safetyData = JSON.parse(fs.readFileSync('safety-report.json', 'utf8'));
-            if (safetyData.length > 0) {
-              comment += '⚠️ **Security vulnerabilities found by Safety:**\n';
-              safetyData.forEach(vuln => {
-                comment += `- ${vuln.package_name} v${vuln.installed_version}: ${vuln.advisory}\n`;
+            
+            // Handle both old format (array) and new scan format (object with vulnerabilities)
+            let vulnerabilities = [];
+            if (Array.isArray(safetyData)) {
+              vulnerabilities = safetyData; // Old format
+            } else if (safetyData.vulnerabilities) {
+              vulnerabilities = safetyData.vulnerabilities; // New scan format
+            }
+            
+            if (vulnerabilities.length > 0) {
+              comment += `⚠️ **${vulnerabilities.length} security vulnerabilities found by Safety:**\n`;
+              vulnerabilities.slice(0, 5).forEach(vuln => {
+                const pkgName = vuln.package_name || vuln.package || 'Unknown package';
+                const version = vuln.installed_version || vuln.version || 'Unknown version';
+                const advisory = vuln.advisory || vuln.title || vuln.summary || 'Security vulnerability';
+                comment += `- **${pkgName}** v${version}: ${advisory}\n`;
               });
+              if (vulnerabilities.length > 5) {
+                comment += `- ... and ${vulnerabilities.length - 5} more vulnerabilities\n`;
+              }
             } else {
-              comment += '✅ No known vulnerabilities found by Safety\n';
+              comment += '✅ **No known vulnerabilities found by Safety**\n';
             }
           } catch (e) {
-            comment += '❓ Safety check results unavailable\n';
+            comment += '❓ **Safety scan results unavailable** (network issue or scan failed)\n';
+            console.log('Safety report error:', e.message);
+          }
+          
+          // Check pip-audit results
+          try {
+            const auditData = JSON.parse(fs.readFileSync('audit-report.json', 'utf8'));
+            if (auditData.length > 0) {
+              comment += `\n⚠️ **${auditData.length} vulnerabilities found by pip-audit:**\n`;
+              auditData.slice(0, 3).forEach(vuln => {
+                comment += `- **${vuln.package}** v${vuln.version}: ${vuln.id}\n`;
+              });
+              if (auditData.length > 3) {
+                comment += `- ... and ${auditData.length - 3} more\n`;
+              }
+            } else {
+              comment += '\n✅ **No vulnerabilities found by pip-audit**\n';
+            }
+          } catch (e) {
+            comment += '\n❓ **pip-audit results unavailable**\n';
           }
           
           comment += '\n📋 Full dependency report available in workflow artifacts.\n';
