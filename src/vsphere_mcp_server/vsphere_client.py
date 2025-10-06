@@ -40,7 +40,7 @@ class VSphereClient:
             self.session.headers.update({"vmware-api-session-id": self.session_token})
 
         except requests.exceptions.RequestException as e:
-            raise Exception(f"Authentication failed: {str(e)}") from e
+            raise ConnectionError(f"Authentication failed: {str(e)}") from e
 
     def get(self, endpoint: str) -> Dict[str, Any]:
         """Make authenticated GET request."""
@@ -59,7 +59,7 @@ class VSphereClient:
             return response.json()
 
         except requests.exceptions.RequestException as e:
-            raise Exception(f"API request failed: {str(e)}") from e
+            raise ConnectionError(f"GET request failed: {str(e)}") from e
 
     def post(
         self, endpoint: str, data: Optional[Dict[str, Any]] = None
@@ -84,7 +84,7 @@ class VSphereClient:
             return response.json() if response.content else {}
 
         except requests.exceptions.RequestException as e:
-            raise Exception(f"API request failed: {str(e)}") from e
+            raise ConnectionError(f"POST request failed: {str(e)}") from e
 
     def close(self) -> None:
         """Close session and logout."""
