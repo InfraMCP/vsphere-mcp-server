@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 import requests
 import urllib3
 
-from .credentials import get_credentials
+from .credentials import CredentialError, get_credentials
 
 
 class VSphereClient:
@@ -24,7 +24,10 @@ class VSphereClient:
 
     def authenticate(self) -> None:
         """Authenticate and get session token."""
-        username, password = get_credentials(self.hostname)
+        try:
+            username, password = get_credentials(self.hostname)
+        except CredentialError as e:
+            raise ConnectionError(f"Authentication failed: {str(e)}") from e
 
         # Create basic auth header
         credentials = base64.b64encode(f"{username}:{password}".encode()).decode()
@@ -39,7 +42,7 @@ class VSphereClient:
             self.session_token = response.json()["value"]
             self.session.headers.update({"vmware-api-session-id": self.session_token})
 
-        except requests.exceptions.RequestException as e:
+        except (requests.exceptions.RequestException, ValueError, KeyError) as e:
             raise ConnectionError(f"Authentication failed: {str(e)}") from e
 
     def get(self, endpoint: str) -> Dict[str, Any]:

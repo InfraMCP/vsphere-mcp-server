@@ -1,9 +1,15 @@
 """Credential management for vSphere MCP server."""
 
 import json
+import os
+import platform
 import subprocess
 import time
 from typing import Tuple
+
+
+class CredentialError(RuntimeError):
+    """Raised when credentials cannot be retrieved or managed."""
 
 
 def extract_domain(hostname: str) -> str:
@@ -15,7 +21,21 @@ def extract_domain(hostname: str) -> str:
 
 
 def get_credentials(hostname: str) -> Tuple[str, str]:
-    """Get credentials for vSphere host with GUI prompts if needed."""
+    """Get credentials for vSphere host.
+
+    Resolution order:
+    1. VSPHERE_USERNAME / VSPHERE_PASSWORD environment variables (all platforms)
+    2. macOS Keychain cache (macOS only)
+    3. macOS GUI prompt (macOS only)
+    """
+    # Env-var override works on any platform (required for WSL / Linux)
+    env_user = os.environ.get("VSPHERE_USERNAME")
+    env_pass = os.environ.get("VSPHERE_PASSWORD")
+    if env_user and env_pass:
+        return env_user, env_pass
+
+    _ensure_supported_platform()
+
     domain = extract_domain(hostname)
     service_name = "vsphere-mcp"
 
@@ -44,7 +64,12 @@ def get_credentials(hostname: str) -> Tuple[str, str]:
 
         return stored_data["username"], stored_data["password"]
 
-    except (subprocess.CalledProcessError, json.JSONDecodeError, KeyError):
+    except (
+        subprocess.CalledProcessError,
+        json.JSONDecodeError,
+        KeyError,
+        FileNotFoundError,
+    ):
         return _prompt_for_credentials(hostname, domain, service_name)
 
 
@@ -77,8 +102,12 @@ display dialog "Enter username for vSphere host {hostname}" ¬
         else:
             raise ValueError("Failed to parse username from dialog")
 
+    except FileNotFoundError as exc:
+        raise CredentialError(
+            "macOS osascript is required for GUI authentication"
+        ) from exc
     except (subprocess.CalledProcessError, IndexError, ValueError) as exc:
-        raise RuntimeError("Username input cancelled or failed") from exc
+        raise CredentialError("Username input cancelled or failed") from exc
 
     # Password prompt
     display_username = (
@@ -109,8 +138,12 @@ display dialog "Enter password for {display_username}" ¬
         else:
             raise ValueError("Failed to parse password from dialog")
 
+    except FileNotFoundError as exc:
+        raise CredentialError(
+            "macOS osascript is required for GUI authentication"
+        ) from exc
     except (subprocess.CalledProcessError, IndexError, ValueError) as exc:
-        raise RuntimeError("Password input cancelled or failed") from exc
+        raise CredentialError("Password input cancelled or failed") from exc
 
     # Normalize username format
     if "@" not in username and "\\" not in username:
@@ -141,7 +174,7 @@ display dialog "Enter password for {display_username}" ¬
             ],
             check=True,
         )
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         pass  # Continue even if keychain storage fails
 
     return username, password
@@ -149,6 +182,7 @@ display dialog "Enter password for {display_username}" ¬
 
 def clear_credentials(hostname: str) -> bool:
     """Clear stored credentials for domain."""
+    _ensure_supported_platform()
     domain = extract_domain(hostname)
     service_name = "vsphere-mcp"
 
@@ -159,5 +193,15 @@ def clear_credentials(hostname: str) -> bool:
             capture_output=True,
         )
         return True
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         return False
+
+
+def _ensure_supported_platform() -> None:
+    """Validate that the current platform supports the keychain/GUI credential flow."""
+    if platform.system() != "Darwin":
+        raise CredentialError(
+            "Credential prompts require macOS Keychain and osascript; "
+            "set VSPHERE_USERNAME and VSPHERE_PASSWORD environment variables "
+            "to use this server on non-macOS platforms (Linux, WSL, containers)"
+        )

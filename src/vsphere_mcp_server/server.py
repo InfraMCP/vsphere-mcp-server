@@ -17,6 +17,8 @@ def _handle_error(e: Exception, operation: str) -> str:
     error_msg = str(e)
 
     if "Authentication failed" in error_msg:
+        if "VSPHERE_USERNAME" in error_msg:
+            return f"Authentication failed for {operation}. {error_msg}"
         return (
             f"Authentication failed for {operation}. "
             "Try clearing credentials with vsphere_clear_credentials."
@@ -84,8 +86,8 @@ def get_vm_details(hostname: str, vm_id: str) -> str:
     """
     client = VSphereClient(hostname)
     try:
-        # If vm_id doesn't start with 'vm-', assume it's a name and look up the ID
-        if not vm_id.startswith("vm-"):
+        requested_vm = vm_id
+        if not _looks_like_vm_moid(vm_id):
             vms_response = client.get("vcenter/vm")
             vms = vms_response.get("value", [])
 
@@ -101,7 +103,21 @@ def get_vm_details(hostname: str, vm_id: str) -> str:
 
             vm_id = vm_id_found
 
-        response = client.get(f"vcenter/vm/{vm_id}")
+        try:
+            response = client.get(f"vcenter/vm/{vm_id}")
+        except ConnectionError as e:
+            # Name looked like a MOID (vm-NNN) but 404'd — retry as a name lookup
+            if _looks_like_vm_moid(vm_id) and requested_vm == vm_id and "404" in str(e):
+                vms_response = client.get("vcenter/vm")
+                for vm in vms_response.get("value", []):
+                    if vm.get("name", "").lower() == requested_vm.lower():
+                        vm_id = vm.get("vm", vm_id)
+                        response = client.get(f"vcenter/vm/{vm_id}")
+                        break
+                else:
+                    raise
+            else:
+                raise
         vm = response.get("value", {})
 
         if not vm:
@@ -305,8 +321,13 @@ def list_datastores(hostname: str) -> str:
 
         result = f"Found {len(datastores)} datastores:\n\n"
         for ds in datastores:
-            capacity = ds.get("capacity", 0)
-            free_space = ds.get("free_space", 0)
+            capacity = ds.get("capacity") or 0
+            free_space = ds.get("free_space") or 0
+            if not isinstance(capacity, (int, float)) or not isinstance(
+                free_space, (int, float)
+            ):
+                capacity = 0
+                free_space = 0
             used_space = capacity - free_space
             used_pct = (used_space / capacity * 100) if capacity > 0 else 0
 
@@ -614,6 +635,11 @@ def list_vlans(hostname: str) -> str:
         return _handle_error(e, "extracting VLAN information")
     finally:
         client.close()
+
+
+def _looks_like_vm_moid(value: str) -> bool:
+    """Return True when the value looks like a vSphere VM managed object ID (e.g. vm-42)."""
+    return bool(re.fullmatch(r"vm-\d+", value))
 
 
 def main() -> None:
