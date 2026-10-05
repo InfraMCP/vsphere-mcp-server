@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-10-05
+
+### Added
+- Environment-variable authentication via `VSPHERE_USERNAME` / `VSPHERE_PASSWORD`,
+  enabling the server to run on Linux, WSL, and containers (not just macOS). The
+  macOS Keychain path is unchanged and still used when env vars are absent (#6).
+
+### Fixed
+- Credential-layer errors (`FileNotFoundError` from a missing `security` binary,
+  `RuntimeError` from a cancelled prompt) are now normalized to `CredentialError`
+  and handled by `authenticate()` instead of crashing (#6).
+- `list_datastores()` no longer raises `TypeError` when vSphere returns null
+  capacity/free-space values (#6).
+- `get_vm_details()` now resolves VMs whose name begins with `vm-` instead of
+  mistaking the name for a managed-object ID and returning a 404 (#6).
+
+### Security
+- Bumped `mcp` 1.14.1 → 1.28.1: WebSocket Host/Origin validation
+  (GHSA-vj7q-gjh5-988w), HTTP transport principal verification
+  (GHSA-jpw9-pfvf-9f58), DNS rebinding (GHSA-9h52-p55h-vw2f).
+- Bumped `urllib3` 2.5.0 → 2.8.0: cross-origin header leak on proxied redirects
+  (GHSA-qccp-gfcp-xxvc) and multiple decompression-bomb bypasses.
+- Bumped `requests` 2.32.5 → 2.33.0: insecure temp-file reuse (GHSA-gc5v-m9x4-r6x2).
+- Bumped dev tooling for advisories: `pytest` 8.3.3 → 9.0.3 (CVE-2025-71176),
+  `black` 24.8.0 → 26.3.1 (CVE-2026-32274), `pytest-asyncio` 0.24.0 → 1.4.0.
+
+## [0.1.1] - 2025-10-06
+
+### Changed
+- Dependency and packaging maintenance release.
+
 ## [0.1.0] - 2025-09-26
 
 ### Added
