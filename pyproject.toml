@@ -22,7 +22,7 @@ classifiers = [
 dependencies = [
     "mcp==1.28.1",
     "requests==2.33.0",
-    "urllib3==2.7.0",
+    "urllib3==2.8.0",
 ]
 
 keywords = ["mcp", "vsphere", "vmware", "virtualization", "infrastructure"]
